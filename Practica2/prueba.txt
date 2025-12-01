@@ -1,0 +1,10 @@
+Copyright (c) 2025 Adrián Quiroga Linares Lectura y referencia permitidas; reutilización y plagio prohibidos
+
+#4 A B C D
+#1 A
+#2 0 1
+--TABLA DE TRANSICIONES--
+B # D # #
+A # C # #
+D # B # #
+C # A # #

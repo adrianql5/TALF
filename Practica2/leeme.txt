@@ -1,0 +1,38 @@
+Copyright (c) 2025 Adrián Quiroga Linares Lectura y referencia permitidas; reutilización y plagio prohibidos
+
+Instrucciones de ejecución:
+
+1. Ejecutar el programa
+    java -jar EvaluarAutomata.jar archivo.txt cadena
+
+2. Ejemplo de ejecución:
+    java -jar EvaluarAutomata.jar automata.txt 152ac22b
+
+3. Ejemplo de salida:
+  Estado(s) inicial(es): [q00]
+  Leyendo símbolo: '1'
+  Estado(s) después de leer: [q10]
+  ---------------
+  Leyendo símbolo: '5'
+  Estado(s) después de leer: [q15]
+  ---------------
+  Leyendo símbolo: '2'
+  Estado(s) después de leer: [q35]
+  ---------------
+  Leyendo símbolo: 'a'
+  Estado(s) después de leer: [q30, qaa]
+  ---------------
+  Leyendo símbolo: 'c'
+  Estado(s) después de leer: [q10, qcc]
+  ---------------
+  Leyendo símbolo: '2'
+  Estado(s) después de leer: [q30]
+  ---------------
+  Leyendo símbolo: '2'
+  Estado(s) después de leer: [q30]
+  ---------------
+  Leyendo símbolo: 'b'
+  Estado(s) después de leer: [q20, qbb]
+  ---------------
+  Cadena aceptada.
+

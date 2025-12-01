@@ -1,0 +1,254 @@
+Copyright (c) 2025 Adrián Quiroga Linares Lectura y referencia permitidas; reutilización y plagio prohibidos
+
+//Automata.java Clase para crear y representar al autómata
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Automata {
+    //Atributos para almacenar los estados, estaods finales, alfabeto y tabla de transciones
+    private ArrayList<String> estados;
+    private ArrayList<String> estadosFinales;
+    private ArrayList<String> alfabeto;
+    private String[][] tablaTransiciones;
+
+
+    //Constructor del autómata a partir de un archivo
+    public Automata(String fichero) {
+        estados = new ArrayList<>();
+        estadosFinales = new ArrayList<>();
+        alfabeto = new ArrayList<>();
+
+        //Bloque try catch para controlar posibles errores al leer el archivo
+        try {
+            Scanner scanner = new Scanner(new File(fichero));
+            
+            //Leo la línea que contiene información sobre los estados 
+            String linea = scanner.nextLine();
+
+            //Divido la línea usando como delimitador el espacio
+            String[] partes = linea.trim().split("\\s+");
+            int numEstados = Integer.parseInt(partes[0].substring(1));
+            
+            //Almaceno los estados (empiezo en 1 para salta el número) 
+            for (int i = 1; i < partes.length; i++) {
+                estados.add(partes[i]);
+            }
+
+            //Leo y almaceno los estados finales de la segunda linea 
+            linea = scanner.nextLine();
+            partes = linea.trim().split("\\s+");
+            int numEstadosFinales = Integer.parseInt(partes[0].substring(1));
+            for (int i = 1; i < partes.length; i++) {
+                estadosFinales.add(partes[i]);
+            }
+
+            //Leo y almaceno el alfabeto de la tercera linea
+            linea = scanner.nextLine();
+            partes = linea.trim().split("\\s+");
+            int numAlfabeto = Integer.parseInt(partes[0].substring(1));
+            for (int i = 1; i < partes.length; i++) { 
+                alfabeto.add(partes[i]);
+            }
+
+            //Leo y almaceno la tabla de transiciones
+            ArrayList<String[]> transiciones = new ArrayList<>();
+            while (scanner.hasNextLine()) {
+                linea = scanner.nextLine().trim();
+
+                //Si la línea está vacía o empieza por -- se salta 
+                if (linea.isEmpty() || linea.startsWith("--")) continue;
+                
+                //Divido la linea en columnas usando '#' como separador
+                partes = linea.split("#");
+                for (int i = 0; i < partes.length; i++) {
+                    //Elimino los espacios de cada parte 
+                    partes[i] = partes[i].trim();
+                }
+
+                //Añado la fila procesada a la lista de transiciones 
+                transiciones.add(partes);
+            }
+
+            //Convierto la lista de transiciones en una matriz
+            tablaTransiciones = new String[transiciones.size()][];
+            for (int i = 0; i < transiciones.size(); i++) {
+                tablaTransiciones[i] = transiciones.get(i);
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //Sección de getters
+    public ArrayList<String> getEstados() {
+        return estados;
+    }
+
+    public ArrayList<String> getEstadosFinales() {
+        return estadosFinales;
+    }
+
+    public ArrayList<String> getAlfabeto() {
+        return alfabeto;
+    }
+
+    public String[][] getTablaTransiciones() {
+        return tablaTransiciones;
+    }
+
+
+    //Método para calcular la clausura de un estado 
+    public String getClausura(String estadoInicial) {
+        ArrayList<String> clausura = new ArrayList<>();
+
+        //Añado el estado del que partimos a la clausura  
+        clausura.add(estadoInicial);
+
+        //Obtengo el índice de la columna de transiciones vacías 
+        int columnaVacia = tablaTransiciones[0].length -1 ;
+
+        //Cola auxiliar para procesar los estados que no han sido explorados
+        ArrayList<String> cola = new ArrayList<>();
+        cola.add(estadoInicial);
+
+        //Mientas la cola no esté vacía sigo buscando posibles destinos mediante
+        // transiciones vacías 
+        while (!cola.isEmpty()) {
+            
+            //Saco el primer estado de la cola 
+            String estadoActual = cola.remove(0);
+
+            //Saco el índice de la fila del estado en el que estoy 
+            int indiceEstado = estados.indexOf(estadoActual);
+            if (indiceEstado == -1) continue;
+
+            //Obtengo los destinos posibles mediante transiciones vacías
+            //desde el estado actual
+            String destinos = tablaTransiciones[indiceEstado][columnaVacia];
+            if (destinos != null && !destinos.isEmpty()) {
+
+                //Divido los posibles destinos en un array usando 
+                //como separador el espacio
+                String[] estadosDestinos = destinos.trim().split("\\s+");
+                for (String destino : estadosDestinos) {
+                    destino = destino.trim();
+
+                    //Si el destino no está vacío y no está en la clausura, lo añado
+                    if (!destino.isEmpty() && !clausura.contains(destino)) {
+                        clausura.add(destino);
+                        
+                        //Añado el nuevo estado a la cola para seguir explorando
+                        // sus transiciones vacías 
+                        cola.add(destino);
+                    }
+                }
+            }
+        }
+        //Devuelvo la clausura como una cadena de estados separados por espacios
+        return String.join(" ", clausura);
+    }
+}
+
+//EvaluarAutomata.java 
+
+import java.util.ArrayList;
+
+public class EvaluarAutomata {
+    public static void main(String[] args) {
+        
+        //Verifico que el usuario pase el número correcto de parámetros
+        if (args.length < 2) {
+            System.out.println("Uso: java EvaluarAutomata <nombre_archivo> <cadena>");
+            return;
+        }
+
+        //Obtengo el nombre y la cadena a evaluar 
+        String nombreArchivo = args[0];
+        Automata a = new Automata(nombreArchivo);
+        String cadena = args[1];
+
+        // Llamo al método paara evaluar la cadena en el autómata
+        evaluarAutomata(a, cadena);
+    }
+
+    //Método para evaluar la cadena en el autómata 
+    private static void evaluarAutomata(Automata a, String cadena) {
+
+        //Divido la cadena en símbolos individuales
+        String[] simbolos = cadena.split("");
+
+        //Lista de estados actuales 
+        ArrayList<String> actuales = new ArrayList<>();
+
+        //Calculo la clausura del estado inicial
+        String clausuraInicial = a.getClausura(a.getEstados().get(0));
+        for (String estado : clausuraInicial.split("\\s+")) {
+            actuales.add(estado);
+        }
+
+        System.out.println("Estado(s) inicial(es): " + actuales);
+
+        //Proceso cada simbolo de la cadena
+        for (String simbolo : simbolos) {
+
+            //Lista de estados alcanzables tras procesar el símbolo actual
+            ArrayList<String> siguientes = new ArrayList<>();
+
+            //Busco el índice de la columna correspondiente al
+            // símbolo en el alfabeto
+            int columnaSimbolo = a.getAlfabeto().indexOf(simbolo);
+            if (columnaSimbolo == -1) {
+                System.out.println("Símbolo '" + simbolo + "' no pertenece al alfabeto.");
+                return;
+            }
+
+            System.out.println("Leyendo símbolo: '" + simbolo + "'");
+
+            //Para cada estado actual, busco los destinos posibles 
+            for (String estado : actuales) {
+                int fila = a.getEstados().indexOf(estado);
+                if (fila == -1) continue;
+
+                //Obtengo los destinos para el símbolo actual 
+                // en la tabla de transiciones
+                String destinos = a.getTablaTransiciones()[fila][columnaSimbolo];
+                if (destinos != null && !destinos.isEmpty()) {
+
+                    //Para cada destino, calculo la clausura y 
+                    // añado los nuevos estados
+                    for (String destino : destinos.trim().split("\\s+")) {
+                        String clausura = a.getClausura(destino);
+                        for (String c : clausura.split("\\s+")) {
+                            if (!siguientes.contains(c)) {
+                                siguientes.add(c);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Actualizo la lista de estados actuales para el siguiente ciclo 
+            actuales = siguientes;
+            System.out.println("Estado(s) después de leer: " + actuales);
+            System.out.println("---------------");
+        }
+
+        //Compruebo si alguno de los estados actuales es un estado final 
+        boolean aceptada = false;
+        for (String estado : actuales) {
+            if (a.getEstadosFinales().contains(estado)) {
+                aceptada = true;
+                break;
+            }
+        }
+        if (aceptada) {
+            System.out.println("Cadena aceptada.");
+        } else {
+            System.out.println("Cadena rechazada.");
+        }
+    }
+}
